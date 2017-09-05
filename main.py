@@ -24,8 +24,12 @@ def load_vgg(sess, vgg_path):
     :param sess: TensorFlow Session
     :param vgg_path: Path to vgg folder, containing "variables/" and
         "saved_model.pb"
-    :return: Tuple of Tensors from VGG model (image_input, keep_prob,
-        layer3_out, layer4_out, layer7_out)
+    :return: Tuple of Tensors from VGG model (
+        image_input,
+        keep_prob,
+        layer3_out,
+        layer4_out,
+        layer7_out)
     """
     # TODO: Implement function
     #   Use tf.saved_model.loader.load to load the model and weights
@@ -36,7 +40,16 @@ def load_vgg(sess, vgg_path):
     vgg_layer4_out_tensor_name = 'layer4_out:0'
     vgg_layer7_out_tensor_name = 'layer7_out:0'
 
-    return None, None, None, None, None
+    tf.saved_model.loader.load(sess, [vgg_tag], vgg_path)
+    graph = tf.get_graph()
+
+    image_input = graph.get_tensor_by_name(vgg_input_tensor_name)
+    keep_prob = graph.get_tensor_by_name(vgg_keep_prob_tensor_name)
+    layer3_out = graph.get_tensor_by_name(vgg_layer3_out_tensor_name)
+    layer4_out = graph.get_tensor_by_name(vgg_layer4_out_tensor_name)
+    layer7_out = graph.get_tensor_by_name(vgg_layer7_out_tensor_name)
+
+    return image_input, keep_prob, layer3_out, layer4_out, layer7_out
 tests.test_load_vgg(load_vgg, tf)
 
 

@@ -101,3 +101,8 @@ ENV/
 .mypy_cache/
 
 RUNS/
+
+# Mac and vim
+.DS_Store
+*.swp
+data/

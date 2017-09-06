@@ -128,9 +128,6 @@ def train_nn(
     :param keep_prob: TF Placeholder for dropout keep probability
     :param learning_rate: TF Placeholder for learning rate
     """
-    # TODO: Implement function
-    init = tf.global_variables_initializer()
-    sess.run(init)
 
     for epoch in range(epochs):
         total_loss = 0.
@@ -147,6 +144,7 @@ def train_nn(
                 })
             total_loss += batch_cost
             num_data_trained += len(batch_x)
+            print('cost: %.9f' % batch_cost)
 
         avg_loss = total_loss / num_data_trained
         print('Epoch: %04d, average loss=%.9f' % ((epoch+1), avg_loss))
@@ -179,12 +177,33 @@ def run():
         #  https://datascience.stackexchange.com/questions/5224/how-to-prepare-augment-images-for-neural-network
 
         # TODO: Build NN using load_vgg, layers, and optimize function
+        input_image, keep_prob, layer3_out, layer4_out, layer7_out = \
+            load_vgg(sess, vgg_path)
+        nn_last_layer = layers(layer3_out, layer4_out, layer7_out, num_classes)
+
+        learning_rate = tf.placeholder(tf.float32)
+        correct_label = tf.placeholder(
+            tf.float32, [None, None, None, num_classes])
+
+        logits, train_op, cross_entropy_loss = \
+            optimize(nn_last_layer, correct_label, learning_rate, num_classes)
+
+        epochs = 3
+        batch_size = 2
 
         # TODO: Train NN using the train_nn function
+        print('Start training nn')
+        init = tf.global_variables_initializer()
+        sess.run(init)
+
+        train_nn(sess, epochs, batch_size, get_batches_fn, train_op,
+                 cross_entropy_loss, input_image, correct_label,
+                 keep_prob, learning_rate)
 
         # TODO: Save inference data using helper.save_inference_samples
-        #  helper.save_inference_samples(runs_dir, data_dir, sess,
-        #      image_shape, logits, keep_prob, input_image)
+        helper.save_inference_samples(
+            runs_dir, data_dir, sess, image_shape, logits,
+            keep_prob, input_image)
 
         # OPTIONAL: Apply the trained model to a video
 

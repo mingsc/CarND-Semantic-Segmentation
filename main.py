@@ -189,7 +189,7 @@ def run():
             optimize(nn_last_layer, correct_label, learning_rate, num_classes)
 
         epochs = 3
-        batch_size = 2
+        batch_size = 8
 
         # TODO: Train NN using the train_nn function
         print('Start training nn')

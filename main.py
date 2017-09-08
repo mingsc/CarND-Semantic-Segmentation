@@ -48,7 +48,7 @@ def load_vgg(sess, vgg_path):
     layer7_out = graph.get_tensor_by_name(vgg_layer7_out_tensor_name)
 
     return image_input, keep_prob, layer3_out, layer4_out, layer7_out
-tests.test_load_vgg(load_vgg, tf)
+# tests.test_load_vgg(load_vgg, tf)
 
 
 def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
@@ -87,7 +87,7 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
         kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
 
     return deconv_3
-tests.test_layers(layers)
+# tests.test_layers(layers)
 
 
 def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
@@ -107,13 +107,13 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
     train_op = optimizer.minimize(cross_entropy_loss)
     return logits, train_op, cross_entropy_loss
-tests.test_optimize(optimize)
+# tests.test_optimize(optimize)
 
 
 def train_nn(
         sess, epochs, batch_size, get_batches_fn, train_op,
         cross_entropy_loss, input_image, correct_label,
-        keep_prob, learning_rate):
+        keep_prob, learning_rate, saver=None):
     """
     Train neural network and print out the loss during training.
     :param sess: TF Session
@@ -131,8 +131,9 @@ def train_nn(
 
     for epoch in range(epochs):
         total_loss = 0.
-        num_data_trained = 0
+        num_batch = 0
 
+        print('Start epoch %04d' % (epoch+1))
         for batch_x, batch_y in get_batches_fn(batch_size):
             _, batch_cost = sess.run(
                 [train_op, cross_entropy_loss],
@@ -140,16 +141,21 @@ def train_nn(
                     input_image: batch_x,
                     correct_label: batch_y,
                     keep_prob: 0.5,
-                    learning_rate: 0.001,
+                    learning_rate: 0.0001,
                 })
             total_loss += batch_cost
-            num_data_trained += len(batch_x)
-            print('cost: %.9f' % batch_cost)
+            num_batch += 1
+            if num_batch % 10 == 0:
+                print('batch cost %.9f' % batch_cost)
 
-        avg_loss = total_loss / num_data_trained
+        avg_loss = total_loss / num_batch
         print('Epoch: %04d, average loss=%.9f' % ((epoch+1), avg_loss))
 
-tests.test_train_nn(train_nn)
+        if saver is not None and (epoch + 1) % 5 == 0:
+            save_path = saver.save(sess, "/tmp/model_epoch_%04d.ckpt" % (epoch + 1))
+            print("Model saved in file: %s" % save_path)
+
+# tests.test_train_nn(train_nn)
 
 
 def run():
@@ -188,22 +194,24 @@ def run():
         logits, train_op, cross_entropy_loss = \
             optimize(nn_last_layer, correct_label, learning_rate, num_classes)
 
-        epochs = 3
+        epochs = 60
         batch_size = 8
 
-        # TODO: Train NN using the train_nn function
-        print('Start training nn')
+        print('Train NN using the train_nn function')
         init = tf.global_variables_initializer()
         sess.run(init)
 
+        saver = tf.train.Saver()
+
         train_nn(sess, epochs, batch_size, get_batches_fn, train_op,
                  cross_entropy_loss, input_image, correct_label,
-                 keep_prob, learning_rate)
+                 keep_prob, learning_rate, saver)
 
-        # TODO: Save inference data using helper.save_inference_samples
+        print('Save inference data using helper.save_inference_samples')
         helper.save_inference_samples(
             runs_dir, data_dir, sess, image_shape, logits,
             keep_prob, input_image)
+
 
         # OPTIONAL: Apply the trained model to a video
 

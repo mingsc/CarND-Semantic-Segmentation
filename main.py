@@ -113,7 +113,7 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
 def train_nn(
         sess, epochs, batch_size, get_batches_fn, train_op,
         cross_entropy_loss, input_image, correct_label,
-        keep_prob, learning_rate):
+        keep_prob, learning_rate, saver=None):
     """
     Train neural network and print out the loss during training.
     :param sess: TF Session
@@ -150,6 +150,10 @@ def train_nn(
 
         avg_loss = total_loss / num_batch
         print('Epoch: %04d, average loss=%.9f' % ((epoch+1), avg_loss))
+
+        if saver is not None and (epoch + 1) % 5 == 0:
+            save_path = saver.save(sess, "/tmp/model_epoch_%04d.ckpt" % (epoch + 1))
+            print("Model saved in file: %s" % save_path)
 
 # tests.test_train_nn(train_nn)
 
@@ -190,7 +194,7 @@ def run():
         logits, train_op, cross_entropy_loss = \
             optimize(nn_last_layer, correct_label, learning_rate, num_classes)
 
-        epochs = 20
+        epochs = 60
         batch_size = 8
 
 
@@ -198,14 +202,17 @@ def run():
         init = tf.global_variables_initializer()
         sess.run(init)
 
+        saver = tf.train.Saver()
+
         train_nn(sess, epochs, batch_size, get_batches_fn, train_op,
                  cross_entropy_loss, input_image, correct_label,
-                 keep_prob, learning_rate)
+                 keep_prob, learning_rate, saver)
 
         print('Save inference data using helper.save_inference_samples')
         helper.save_inference_samples(
             runs_dir, data_dir, sess, image_shape, logits,
             keep_prob, input_image)
+
 
         # OPTIONAL: Apply the trained model to a video
 

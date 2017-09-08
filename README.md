@@ -1,8 +1,12 @@
 # Semantic Segmentation
-### Introduction
-In this project, you'll label the pixels of a road in images using a Fully Convolutional Network (FCN).
 
-### Setup
+This project is part of my Udacity Self-Driving-Car Nano Degree project, was originally forked from [Udacity](https://github.com/udacity/CarND-Semantic-Segmentation) then modified by olala7846@gmail.com
+
+for the origin project setup, please reference [Udacity's Repo](https://github.com/udacity/CarND-Semantic-Segmentation)
+
+## Introduction
+Sementic Segmentation with Fully Convolutional Networks using Python Tensorflow
+
 ##### Frameworks and Packages
 Make sure you have the following is installed:
  - [Python 3](https://www.python.org/)
@@ -10,34 +14,19 @@ Make sure you have the following is installed:
  - [NumPy](http://www.numpy.org/)
  - [SciPy](https://www.scipy.org/)
 ##### Dataset
-Download the [Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road.php) from [here](http://www.cvlibs.net/download.php?file=data_road.zip).  Extract the dataset in the `data` folder.  This will create the folder `data_road` with all the training a test images.
+[Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road.php)
 
-### Start
-##### Implement
-Implement the code in the `main.py` module indicated by the "TODO" comments.
-The comments indicated with "OPTIONAL" tag are not required to complete.
-##### Run
-Run the following command to run the project:
-```
-python main.py
-```
-**Note** If running this in Jupyter Notebook system messages, such as those regarding test status, may appear in the terminal rather than the notebook.
+## Report
+I implemented the [FCN-8 architecture](https://people.eecs.berkeley.edu/~jonlong/long_shelhamer_fcn.pdf) and train on AWS spot instances
 
-### Submission
-1. Ensure you've passed all the unit tests.
-2. Ensure you pass all points on [the rubric](https://review.udacity.com/#!/rubrics/989/view).
-3. Submit the following in a zip file.
- - `helper.py`
- - `main.py`
- - `project_tests.py`
- - Newest inference images from `runs` folder
+The training data looks the following image
+![train_x](./images/training/um_000002.png)
+And the label data looks like this
+![train_y](./images/training/um_road_000002.png)
+The purple pixels are labeld as road.
 
- ## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
-
-## GPU / Docker / GCP
-
-cd ./docker
-sudo docker build . -t python3-tensorflow-gpu
-sudo nvidia-docker run --rm --exec -v .:/CarND/ python3-tensorflow-gpu bash
-
+After training 60 epochs, the results looks like the followin images
+![sample1](./images/um_000002.png)
+![sample2](./images/um_000018.png)
+![sample3](./images/umm_000035.png)
+![sample4](./images/uu_000098.png)

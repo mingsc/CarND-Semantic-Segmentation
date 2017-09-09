@@ -48,7 +48,7 @@ def load_vgg(sess, vgg_path):
     layer7_out = graph.get_tensor_by_name(vgg_layer7_out_tensor_name)
 
     return image_input, keep_prob, layer3_out, layer4_out, layer7_out
-# tests.test_load_vgg(load_vgg, tf)
+tests.test_load_vgg(load_vgg, tf)
 
 
 def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
@@ -61,33 +61,40 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     :param num_classes: Number of classes to classify
     :return: The Tensor for the last layer of output
     """
+    # FCN-8 architecture https://goo.gl/WfA7ke
+    # Add a fully connected layer of 6?
     layer_7_conv_1x1 = tf.layers.conv2d(
         vgg_layer7_out, num_classes, 1, padding='same',
-        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+        kernel_initializer=tf.random_normal_initializer(stddev=0.01))
+
     deconv_1 = tf.layers.conv2d_transpose(
         layer_7_conv_1x1, num_classes, 4, strides=(2, 2), padding='same',
-        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+        kernel_initializer=tf.random_normal_initializer(stddev=0.01))
     layer_4_conv_1x1 = tf.layers.conv2d(
         vgg_layer4_out, num_classes, 1, padding='same',
-        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+        kernel_initializer=tf.random_normal_initializer(stddev=0.01))
     skip_1 = tf.add(deconv_1, layer_4_conv_1x1)
+
     deconv_2 = tf.layers.conv2d_transpose(
         skip_1, num_classes, 4, strides=(2, 2), padding='same',
-        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+        kernel_initializer=tf.random_normal_initializer(stddev=0.01))
     layer_3_conv_1x1 = tf.layers.conv2d(
         vgg_layer3_out, num_classes, 1, padding='same',
-        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+        kernel_initializer=tf.random_normal_initializer(stddev=0.01))
     skip_2 = tf.add(deconv_2, layer_3_conv_1x1)
+
     deconv_3 = tf.layers.conv2d_transpose(
         skip_2, num_classes, 16, strides=(8, 8), padding='same',
-        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+        kernel_initializer=tf.random_normal_initializer(stddev=0.01))
 
     return deconv_3
-# tests.test_layers(layers)
+tests.test_layers(layers)
 
 
 def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
@@ -107,7 +114,7 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
     train_op = optimizer.minimize(cross_entropy_loss)
     return logits, train_op, cross_entropy_loss
-# tests.test_optimize(optimize)
+tests.test_optimize(optimize)
 
 
 def train_nn(
@@ -152,10 +159,11 @@ def train_nn(
         print('Epoch: %04d, average loss=%.9f' % ((epoch+1), avg_loss))
 
         if saver is not None and (epoch + 1) % 5 == 0:
-            save_path = saver.save(sess, "/tmp/model_epoch_%04d.ckpt" % (epoch + 1))
+            save_path = saver.save(
+                sess, "/tmp/model_epoch_%04d.ckpt" % (epoch + 1))
             print("Model saved in file: %s" % save_path)
 
-# tests.test_train_nn(train_nn)
+tests.test_train_nn(train_nn)
 
 
 def run():
@@ -179,10 +187,10 @@ def run():
         get_batches_fn = helper.gen_batch_function(
             os.path.join(data_dir, 'data_road/training'), image_shape)
 
-        # OPTIONAL: Augment Images for better results
+        # TODO(Olala): Augment Images for better results
         #  https://datascience.stackexchange.com/questions/5224/how-to-prepare-augment-images-for-neural-network
 
-        # TODO: Build NN using load_vgg, layers, and optimize function
+        print('Build NN using load_vgg, layers, and optimize function')
         input_image, keep_prob, layer3_out, layer4_out, layer7_out = \
             load_vgg(sess, vgg_path)
         nn_last_layer = layers(layer3_out, layer4_out, layer7_out, num_classes)
@@ -194,7 +202,7 @@ def run():
         logits, train_op, cross_entropy_loss = \
             optimize(nn_last_layer, correct_label, learning_rate, num_classes)
 
-        epochs = 60
+        epochs = 30
         batch_size = 8
 
         print('Train NN using the train_nn function')
@@ -212,9 +220,7 @@ def run():
             runs_dir, data_dir, sess, image_shape, logits,
             keep_prob, input_image)
 
-
-        # OPTIONAL: Apply the trained model to a video
-
+        # TODO(Olala): Apply the trained model to a video
 
 if __name__ == '__main__':
     run()

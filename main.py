@@ -119,7 +119,7 @@ tests.test_optimize(optimize)
 def train_nn(
         sess, epochs, batch_size, get_batches_fn, train_op,
         cross_entropy_loss, input_image, correct_label,
-        keep_prob, learning_rate, saver=None):
+        keep_prob, learning_rate):
     """
     Train neural network and print out the loss during training.
     :param sess: TF Session
@@ -157,11 +157,6 @@ def train_nn(
         avg_loss = total_loss / num_batch
         print('Epoch: %04d, average loss=%.9f' % ((epoch+1), avg_loss))
 
-        if saver is not None and (epoch + 1) % 5 == 0:
-            save_path = saver.save(
-                sess, "/tmp/model_epoch_%04d.ckpt" % (epoch + 1))
-            print("Model saved in file: %s" % save_path)
-
 tests.test_train_nn(train_nn)
 
 
@@ -170,6 +165,7 @@ def run():
     image_shape = (160, 576)
     data_dir = './data'
     runs_dir = './runs'
+    export_dir = './saved_model'
     tests.test_for_kitti_dataset(data_dir)
 
     # Download pretrained vgg model
@@ -178,6 +174,9 @@ def run():
     # OPTIONAL: Train and Inference on the cityscapes dataset instead of the Kitti dataset.  # noqa
     # You'll need a GPU with at least 10 teraFLOPS to train on.
     #  https://www.cityscapes-dataset.com/
+
+    # Save model and freeze it later
+    builder = tf.saved_mode.builder.SavedModelBuilder(export_dir)
 
     with tf.Session() as sess:
         # Path to vgg model
@@ -208,11 +207,13 @@ def run():
         init = tf.global_variables_initializer()
         sess.run(init)
 
-        saver = tf.train.Saver()
-
         train_nn(sess, epochs, batch_size, get_batches_fn, train_op,
                  cross_entropy_loss, input_image, correct_label,
-                 keep_prob, learning_rate, saver)
+                 keep_prob, learning_rate)
+
+        print('Saving model and variables to %s' % export_dir)
+        builder.add_meta_graph_and_variables(sess, ['carnd'])
+        builder.save()
 
         print('Save inference data using helper.save_inference_samples')
         helper.save_inference_samples(

@@ -119,7 +119,7 @@ tests.test_optimize(optimize)
 def train_nn(
         sess, epochs, batch_size, get_batches_fn, train_op,
         cross_entropy_loss, input_image, correct_label,
-        keep_prob, learning_rate):
+        keep_prob, learning_rate, saver=None):
     """
     Train neural network and print out the loss during training.
     :param sess: TF Session
@@ -156,6 +156,9 @@ def train_nn(
 
         avg_loss = total_loss / num_batch
         print('Epoch: %04d, average loss=%.9f' % ((epoch+1), avg_loss))
+        print('Saver: %s' % saver)
+        if saver is not None:
+            saver.save(sess, './saved_model/checkpoint', global_step=(epoch+1))
 
 tests.test_train_nn(train_nn)
 
@@ -205,11 +208,12 @@ def run():
 
         print('Train NN using the train_nn function')
         init = tf.global_variables_initializer()
+        saver = tf.train.Saver()
         sess.run(init)
 
         train_nn(sess, epochs, batch_size, get_batches_fn, train_op,
                  cross_entropy_loss, input_image, correct_label,
-                 keep_prob, learning_rate)
+                 keep_prob, learning_rate, saver)
 
         print('Saving model and variables to %s' % export_dir)
         builder.add_meta_graph_and_variables(sess, ['carnd'])

@@ -176,7 +176,7 @@ def run():
     #  https://www.cityscapes-dataset.com/
 
     # Save model and freeze it later
-    builder = tf.saved_mode.builder.SavedModelBuilder(export_dir)
+    builder = tf.saved_model.builder.SavedModelBuilder(export_dir)
 
     with tf.Session() as sess:
         # Path to vgg model
